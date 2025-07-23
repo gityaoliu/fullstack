@@ -6,9 +6,11 @@ const {
   getFilteredProducts,
   getProductDetails,
 } = require("../../controllers/shop/products-controller");
+const { upload } = require("../../helpers/local-upload");
 
 const router = express.Router();
 
+router.post("/add", upload.single("image"), addProduct);
 router.get("/get", getFilteredProducts);
 router.get("/get/:id", getProductDetails);
 
@@ -20,7 +22,7 @@ router.post("/add", async (req, res) => {
       name,
       price,
       salePrice,
-      category,  // 
+      category,  
       image,
       stock,
       productCode,

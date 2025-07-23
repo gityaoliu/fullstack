@@ -1,4 +1,3 @@
-import ProductFilter from "@/components/shopping-view/filter";
 import ProductDetailsDialog from "@/components/shopping-view/product-details";
 import ShoppingProductTile from "@/components/shopping-view/product-tile";
 import { Button } from "@/components/ui/button";
@@ -10,7 +9,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/components/ui/use-toast";
-import { sortOptions } from "@/config";
 import { addToCart, fetchCartItems } from "@/store/shop/cart-slice";
 import {
   fetchAllFilteredProducts,
@@ -44,7 +42,6 @@ function ShoppingListing() {
   );
   const { cartItems } = useSelector((state) => state.shopCart);
   const { user } = useSelector((state) => state.auth);
-  const [filters, setFilters] = useState({});
   const [sort, setSort] = useState(null);
   const [searchParams, setSearchParams] = useSearchParams();
   const [openDetailsDialog, setOpenDetailsDialog] = useState(false);
@@ -121,22 +118,8 @@ function ShoppingListing() {
   }
 
   useEffect(() => {
-    setSort("price-lowtohigh");
-    setFilters(JSON.parse(sessionStorage.getItem("filters")) || {});
-  }, [categorySearchParam]);
-
-  useEffect(() => {
-    const createQueryString = createSearchParamsHelper(filters);
-    setSearchParams(new URLSearchParams(createQueryString));
-  }, [filters]);
-
-
-  useEffect(() => {
-    if (filters !== null && sort !== null)
-      dispatch(
-        fetchAllFilteredProducts({ filterParams: filters, sortParams: sort })
-      );
-  }, [dispatch, sort, filters]);
+  dispatch(fetchAllFilteredProducts({}));
+}, [dispatch]);
 
   useEffect(() => {
     if (productDetails !== null) setOpenDetailsDialog(true);
@@ -145,8 +128,7 @@ function ShoppingListing() {
   console.log(productList, "productListproductListproductList");
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-6 p-4 md:p-6">
-      <ProductFilter filters={filters} handleFilter={handleFilter} />
+    <div className="grid gap-4 p-4 grid-cols-[repeat(auto-fit,minmax(250px,1fr))]">
       <div className="bg-background w-full rounded-lg shadow-sm">
         <div className="p-4 border-b flex items-center justify-between">
           <h2 className="text-lg font-extrabold">All Products</h2>
@@ -154,7 +136,7 @@ function ShoppingListing() {
             <span className="text-muted-foreground">
               {productList?.length} Products
             </span>
-            <DropdownMenu>
+            {/* <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="outline"
@@ -177,7 +159,7 @@ function ShoppingListing() {
                   ))}
                 </DropdownMenuRadioGroup>
               </DropdownMenuContent>
-            </DropdownMenu>
+            </DropdownMenu> */}
           </div>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">

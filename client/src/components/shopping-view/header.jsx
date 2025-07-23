@@ -8,7 +8,6 @@ import {
 import { Sheet, SheetContent, SheetTrigger } from "../ui/sheet";
 import { Button } from "../ui/button";
 import { useDispatch, useSelector } from "react-redux";
-import { shoppingViewHeaderMenuItems } from "@/config";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,47 +23,67 @@ import { useEffect, useState } from "react";
 import { fetchCartItems } from "@/store/shop/cart-slice";
 import { Label } from "../ui/label";
 import nailcodeLogo from "../../assets/nailcodeLogo.png";
+import { getSearchResults, resetSearchResults } from "@/store/shop/search-slice";
+import { Input } from "@/components/ui/input"; 
 
 function MenuItems() {
   const navigate = useNavigate();
-  const location = useLocation();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const dispatch = useDispatch();
+  const { searchResults } = useSelector((state) => state.shopSearch);
 
-  function handleNavigate(getCurrentMenuItem) {
-    sessionStorage.removeItem("filters");
-    const currentFilter =
-      getCurrentMenuItem.id !== "home" &&
-      getCurrentMenuItem.id !== "products" &&
-      getCurrentMenuItem.id !== "search"
-        ? {
-            category: [getCurrentMenuItem.id],
-          }
-        : null;
+  const [keyword, setKeyword] = useState("");
 
-    sessionStorage.setItem("filters", JSON.stringify(currentFilter));
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (keyword.trim()) {
+      navigate(`/shop/search?keyword=${encodeURIComponent(keyword.trim())}`);
+    }
+  };
 
-    location.pathname.includes("listing") && currentFilter !== null
-      ? setSearchParams(
-          new URLSearchParams(`?category=${getCurrentMenuItem.id}`)
-        )
-      : navigate(getCurrentMenuItem.path);
-  }
+  useEffect(() => {
+    if (keyword.trim().length > 2) {
+      dispatch(getSearchResults(keyword.trim()));
+    } else {
+      dispatch(resetSearchResults());
+    }
+  }, [keyword, dispatch]);
 
   return (
-    <nav className="flex flex-col mb-3 lg:mb-0 lg:items-center gap-6 lg:flex-row">
-      {shoppingViewHeaderMenuItems.map((menuItem) => (
-        <Label
-          onClick={() => handleNavigate(menuItem)}
-          className="text-sm font-medium cursor-pointer"
-          key={menuItem.id}
-        >
-          {menuItem.label}
-        </Label>
-      ))}
+    <nav className="flex flex-col mb-3 lg:mb-0 lg:items-center gap-6 lg:flex-row relative">
+
+      {/* 🔍 搜索框 */}
+      <div className="relative w-full max-w-xs">
+        <Input
+          type="text"
+          placeholder="Search products..."
+          value={keyword}
+          onChange={(e) => setKeyword(e.target.value)}
+          className="h-8 w-[200px]"
+        />
+
+        {/* 搜索结果浮层 */}
+        {keyword.trim().length > 2 && searchResults.length > 0 && (
+          <div className="absolute top-10 left-0 w-full bg-white border rounded shadow-lg z-50 max-h-60 overflow-y-auto">
+            {searchResults.map((item) => (
+              <div
+                key={item._id}
+                className="px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer"
+                onClick={() => {
+                  setKeyword("");
+                  navigate(`/shop/listing?productId=${item._id}`);
+                }}
+              >
+                {item.title}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </nav>
   );
 }
 
+// 右侧内容组件
 function HeaderRightContent() {
   const { user } = useSelector((state) => state.auth);
   const { cartItems } = useSelector((state) => state.shopCart);
@@ -77,8 +96,10 @@ function HeaderRightContent() {
   }
 
   useEffect(() => {
-    dispatch(fetchCartItems(user?.id));
-  }, [dispatch]);
+    if (user?.id) {
+      dispatch(fetchCartItems(user.id));
+    }
+  }, [dispatch, user]);
 
     // 计算总价
   const totalPrice = cartItems?.items?.reduce((sum, item) => {
@@ -158,29 +179,10 @@ function HeaderRightContent() {
 function ShoppingHeader() {
   const { isAuthenticated } = useSelector((state) => state.auth);
 
-  // ✅ 顶部轮播内容逻辑
-  const rotatingTexts = [
-    "🌸 Welcome to NailCode – Spring Collection Just Dropped!",
-    "💅 Salon-Quality Nails, No Appointment Needed",
-    "🚚 Free Shipping on Orders Over $30",
-  ];
 
-  const [index, setIndex] = useState(0);
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setIndex((prev) => (prev + 1) % rotatingTexts.length);
-    }, 3000);
-    return () => clearInterval(timer);
-  }, []);
 
   return (
     <>
-      {/* 🌸 粉色渐变顶部横线 + 滚动文字 */}
-      <div className="w-full h-6 flex items-center justify-center bg-gradient-to-r from-pink-100 via-[#ffeef3] to-pink-200 text-[#d63384] font-medium text-sm transition-all duration-500">
-        {rotatingTexts[index]}
-      </div>
-
       <header className="sticky top-0 z-40 w-full border-b bg-background">
         <div className="flex h-16 items-center justify-between px-4 md:px-6">
         <Link to="/shop/home" className="flex items-center gap-2">
@@ -201,11 +203,11 @@ function ShoppingHeader() {
             </SheetContent>
           </Sheet>
 
-          <div className="hidden lg:block">
+          <div className="flex-1 flex justify-center lg:justify-start">
             <MenuItems />
           </div>
 
-          <div className="hidden lg:block">
+          <div className="flex-shrink-0">
             <HeaderRightContent />
           </div>
         </div>

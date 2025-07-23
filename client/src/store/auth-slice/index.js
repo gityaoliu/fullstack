@@ -58,8 +58,9 @@ export const logoutUser = createAsyncThunk(
 export const checkAuth = createAsyncThunk(
   "/auth/checkauth",
 
-  async () => {
-    const response = await axios.get(
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await axios.get(
       "http://localhost:8000/api/auth/check-auth",
       {
         withCredentials: true,
@@ -69,8 +70,11 @@ export const checkAuth = createAsyncThunk(
         },
       }
     );
-
     return response.data;
+  } catch (err) {
+    console.warn("🔐 checkAuth failed: ", err?.response?.status); 
+    return rejectWithValue(err?.response?.data || { success: false });
+    }
   }
 );
 
@@ -119,6 +123,7 @@ const authSlice = createSlice({
         state.isAuthenticated = action.payload.success;
       })
       .addCase(checkAuth.rejected, (state, action) => {
+        console.warn("🔐 checkAuth failed: ", action.error?.message || "Unknown error");
         state.isLoading = false;
         state.user = null;
         state.isAuthenticated = false;
