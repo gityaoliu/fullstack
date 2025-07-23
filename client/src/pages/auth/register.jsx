@@ -1,41 +1,41 @@
-import CommonForm from "@/components/common/form";
-import { useToast } from "@/components/ui/use-toast";
-import { registerFormControls } from "@/config";
-import { registerUser } from "@/store/auth-slice";
-import { useState } from "react";
+import AuthForm from "@/components/common/AuthForm";
 import { useDispatch } from "react-redux";
-import { Link, useNavigate } from "react-router-dom";
-
-const initialState = {
-  userName: "",
-  email: "",
-  password: "",
-};
+import { useToast } from "@/components/ui/use-toast";
+import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { registerUser } from "@/store/auth-slice";
 
 function AuthRegister() {
-  const [formData, setFormData] = useState(initialState);
+  const [formData, setFormData] = useState({
+    userName: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    isAdmin: false,
+  });
+
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  function onSubmit(event) {
-    event.preventDefault();
+  const onSubmit = () => {
     dispatch(registerUser(formData)).then((data) => {
-      // if (data?.payload?.success) {
-      //   toast({
-      //     title: data?.payload?.message,
-      //   });
+      const result = data?.payload;
+      if (result?.success) {
+        toast({
+          title: "🎉 Registration successful",
+          description: "You can now log in to your account.",
+        });
         navigate("/auth/login");
-      // } else {
-      //   toast({
-      //     title: data?.payload?.message,
-      //     variant: "destructive",
-      //   });
-      // }
+      } else {
+        toast({
+          title: "❌ Registration failed",
+          description: result?.message || "Please try again later.",
+          variant: "destructive",
+        });
+      }
     });
-  }
-
-  console.log(formData);
+  };
 
   return (
     <div className="mx-auto w-full max-w-md space-y-6">
@@ -43,19 +43,10 @@ function AuthRegister() {
         <h1 className="text-3xl font-bold tracking-tight text-foreground">
           Create new account
         </h1>
-        <p className="mt-2">
-          Already have an account
-          <Link
-            className="font-medium ml-2 text-primary hover:underline"
-            to="/auth/login"
-          >
-            Login
-          </Link>
-        </p>
       </div>
-      <CommonForm
-        formControls={registerFormControls}
-        buttonText={"Sign Up"}
+
+      <AuthForm
+        mode="signup"
         formData={formData}
         setFormData={setFormData}
         onSubmit={onSubmit}

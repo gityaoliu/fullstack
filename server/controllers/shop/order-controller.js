@@ -1,202 +1,84 @@
-const paypal = require("../../helpers/paypal");
 const Order = require("../../models/Order");
 const Cart = require("../../models/Cart");
 const Product = require("../../models/Product");
 
+// 创建订单（点击 Checkout 即可）
 const createOrder = async (req, res) => {
   try {
-    const {
-      userId,
-      cartItems,
-      addressInfo,
-      orderStatus,
-      paymentMethod,
-      paymentStatus,
-      totalAmount,
-      orderDate,
-      orderUpdateDate,
-      paymentId,
-      payerId,
-      cartId,
-      discountInfo,
-    } = req.body;
+    const { userId } = req.body;
 
-    const create_payment_json = {
-      intent: "sale",
-      payer: {
-        payment_method: "paypal",
-      },
-      redirect_urls: {
-        return_url: "http://localhost:5173/shop/paypal-return",
-        cancel_url: "http://localhost:5173/shop/paypal-cancel",
-      },
-      transactions: [
-        {
-          amount: {
-            currency: "USD",
-            total: totalAmount.toFixed(2),
-          },
-          description: "Order with possible discount",
-        },
-      ],
-    };
-    console.log("🧾 create_payment_json", JSON.stringify(create_payment_json, null, 2));
-
-
-    paypal.payment.create(create_payment_json, async (error, paymentInfo) => {
-      if (error) {
-        console.log(error);
-
-        return res.status(500).json({
-          success: false,
-          message: "Error while creating paypal payment",
-        });
-      } else {
-        const newlyCreatedOrder = new Order({
-          userId,
-          cartId,
-          cartItems,
-          addressInfo,
-          orderStatus,
-          paymentMethod,
-          paymentStatus,
-          totalAmount,
-          orderDate,
-          orderUpdateDate,
-          paymentId,
-          payerId,
-          discountInfo,
-        });
-
-        await newlyCreatedOrder.save();
-
-        const approvalURL = paymentInfo.links.find(
-          (link) => link.rel === "approval_url"
-        ).href;
-
-        res.status(201).json({
-          success: true,
-          approvalURL,
-          orderId: newlyCreatedOrder._id,
-        });
-      }
-    });
-  } catch (e) {
-    console.log(e);
-    res.status(500).json({
-      success: false,
-      message: "Some error occured!",
-    });
-  }
-};
-
-const capturePayment = async (req, res) => {
-  try {
-    const { paymentId, payerId, orderId } = req.body;
-
-    let order = await Order.findById(orderId);
-
-    if (!order) {
-      return res.status(404).json({
+    const cart = await Cart.findOne({ userId });
+    if (!cart || cart.items.length === 0) {
+      return res.status(400).json({
         success: false,
-        message: "Order can not be found",
+        message: "Cart is empty.",
       });
     }
 
-    order.paymentStatus = "paid";
-    order.orderStatus = "confirmed";
-    order.paymentId = paymentId;
-    order.payerId = payerId;
+    const cartItems = cart.items.map((item) => ({
+      productId: item.productId,
+      title: item.title,
+      image: item.image,
+      price: item.price,
+      quantity: item.quantity,
+    }));
 
-    for (let item of order.cartItems) {
-      let product = await Product.findById(item.productId);
+    const totalAmount = cartItems.reduce(
+      (sum, item) => sum + item.quantity * item.price,
+      0
+    );
 
-      if (!product) {
-        return res.status(404).json({
-          success: false,
-          message: `Not enough stock for this product ${product.title}`,
-        });
-      }
+    const newOrder = new Order({
+      userId,
+      cartItems,
+      totalAmount,
+      orderStatus: "confirmed",
+    });
 
-      product.totalStock -= item.quantity;
+    await newOrder.save();
 
-      await product.save();
+    // 扣库存
+    for (const item of cartItems) {
+      await Product.findByIdAndUpdate(item.productId, {
+        $inc: { totalStock: -item.quantity },
+      });
     }
 
-    const getCartId = order.cartId;
-    await Cart.findByIdAndDelete(getCartId);
+    // 清空购物车
+    await Cart.findByIdAndDelete(cart._id);
 
-    await order.save();
-
-    res.status(200).json({
+    res.status(201).json({
       success: true,
-      message: "Order confirmed",
-      data: order,
+      message: "Order created successfully",
+      order: newOrder,
     });
   } catch (e) {
-    console.log(e);
+    console.error("❌ Order create error:", e);
     res.status(500).json({
       success: false,
-      message: "Some error occured!",
+      message: "Server error",
     });
   }
 };
 
+// 查询用户订单
 const getAllOrdersByUser = async (req, res) => {
   try {
     const { userId } = req.params;
-
     const orders = await Order.find({ userId });
-
-    if (!orders.length) {
-      return res.status(404).json({
-        success: false,
-        message: "No orders found!",
-      });
-    }
-
     res.status(200).json({
       success: true,
       data: orders,
     });
   } catch (e) {
-    console.log(e);
     res.status(500).json({
       success: false,
-      message: "Some error occured!",
-    });
-  }
-};
-
-const getOrderDetails = async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    const order = await Order.findById(id);
-
-    if (!order) {
-      return res.status(404).json({
-        success: false,
-        message: "Order not found!",
-      });
-    }
-
-    res.status(200).json({
-      success: true,
-      data: order,
-    });
-  } catch (e) {
-    console.log(e);
-    res.status(500).json({
-      success: false,
-      message: "Some error occured!",
+      message: "Failed to get orders",
     });
   }
 };
 
 module.exports = {
   createOrder,
-  capturePayment,
   getAllOrdersByUser,
-  getOrderDetails,
 };

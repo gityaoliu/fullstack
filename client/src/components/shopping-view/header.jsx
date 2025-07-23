@@ -80,8 +80,23 @@ function HeaderRightContent() {
     dispatch(fetchCartItems(user?.id));
   }, [dispatch]);
 
+    // 计算总价
+  const totalPrice = cartItems?.items?.reduce((sum, item) => {
+    const quantity = item.quantity || 1;
+    const price = item.price || 0;
+    return sum + quantity * price;
+  }, 0) ?? 0;
+
+  // 格式化为两位小数的价格数字
+  const formattedTotalPrice = `$${totalPrice.toFixed(2)}`;
+
   return (
     <div className="flex lg:items-center lg:flex-row flex-col gap-4">
+      {/* 💰 显示总价 */}
+      <span className="text-sm font-semibold text-muted-foreground">
+        {formattedTotalPrice}
+      </span>
+      {/* 购物车图标 🛒 */}
       <Sheet open={openCartSheet} onOpenChange={() => setOpenCartSheet(false)}>
         <Button
           onClick={() => setOpenCartSheet(true)}
@@ -90,9 +105,13 @@ function HeaderRightContent() {
           className="relative"
         >
           <ShoppingCart className="w-6 h-6" />
+          {/* 数量 */}
           <span className="absolute top-[-5px] right-[2px] font-bold text-sm">
             {cartItems?.items?.length || 0}
           </span>
+
+
+
           <span className="sr-only">User cart</span>
         </Button>
         <UserCartWrapper
@@ -105,6 +124,7 @@ function HeaderRightContent() {
         />
       </Sheet>
 
+{/* 下拉菜单 */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Avatar className="bg-black">
@@ -119,6 +139,10 @@ function HeaderRightContent() {
           <DropdownMenuItem onClick={() => navigate("/shop/account")}>
             <UserCog className="mr-2 h-4 w-4" />
             Account
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => navigate("/auth/update-password")}>
+            <UserCog className="mr-2 h-4 w-4" />
+            Update Password
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={handleLogout}>

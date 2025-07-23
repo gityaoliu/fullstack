@@ -96,6 +96,44 @@ const logoutUser = (req, res) => {
   });
 };
 
+// updatePassword
+const updatePassword = async (req, res) => {
+  const userId = req.params.id;
+  const { currentPassword, newPassword } = req.body;
+
+  try {
+    const user = await User.findById(userId);
+    if (!user)
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch)
+      return res.status(400).json({
+        success: false,
+        message: "Current password is incorrect",
+      });
+
+    const hashedNewPassword = await bcrypt.hash(newPassword, 12);
+    user.password = hashedNewPassword;
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Password updated successfully",
+    });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+  }
+};
+
+
 //auth middleware
 const authMiddleware = async (req, res, next) => {
   const token = req.cookies.token;
@@ -117,4 +155,9 @@ const authMiddleware = async (req, res, next) => {
   }
 };
 
-module.exports = { registerUser, loginUser, logoutUser, authMiddleware };
+module.exports = { 
+  registerUser, 
+  loginUser, 
+  logoutUser, 
+  updatePassword,
+  authMiddleware };

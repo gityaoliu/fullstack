@@ -1,4 +1,5 @@
 const Product = require("../../models/Product");
+const path = require("path");
 
 // ✅ 添加产品的 API
 const addProduct = async (req, res) => {
@@ -8,13 +9,15 @@ const addProduct = async (req, res) => {
     if (!title || !price || !category || !image) {
       return res.status(400).json({ success: false, message: "Missing required fields!" });
     }
+    // 上传图片路径
+    const imagePath = `../../uploads/${req.file.filename}`;
 
     const newProduct = new Product({
       title,
       price,
       category: Array.isArray(category) ? category : [category], // 确保 category 是数组
       brand: Array.isArray(brand) ? brand : [brand], // 确保 brand 是数组
-      image,
+      image,imagePath,
       productCode,
     });
 

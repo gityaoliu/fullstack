@@ -3,6 +3,7 @@ const {
   registerUser,
   loginUser,
   logoutUser,
+  updatePassword,
   authMiddleware,
 } = require("../../controllers/auth/auth-controller");
 
@@ -12,6 +13,7 @@ const router = express.Router();
 router.post("/register", registerUser);
 router.post("/login", loginUser);
 router.post("/logout", logoutUser);
+router.put("/update-password/:id", authMiddleware, updatePassword);
 
 // ✅ 添加获取所有用户的 API
 router.get("/users", async (req, res) => {
