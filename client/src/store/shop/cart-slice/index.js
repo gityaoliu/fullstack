@@ -4,6 +4,10 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 const initialState = {
   cartItems: [],
   isLoading: false,
+  appliedCoupon: null,
+  couponDiscount: 0,
+  couponMessage: "",
+  isValidatingCoupon: false,
 };
 
 // 游客购物车本地存储键
@@ -183,6 +187,18 @@ export const mergeGuestCartToUser = createAsyncThunk(
   }
 );
 
+// 验证优惠码
+export const validateCoupon = createAsyncThunk(
+  "cart/validateCoupon",
+  async ({ code }) => {
+    const response = await axios.post(
+      "http://localhost:8000/api/shop/coupons/validate",
+      { code }
+    );
+    return response.data;
+  }
+);
+
 const shoppingCartSlice = createSlice({
   name: "shoppingCart",
   initialState,
@@ -198,6 +214,16 @@ const shoppingCartSlice = createSlice({
         const guestCart = getGuestCart();
         state.cartItems = { items: guestCart };
       }
+    },
+    // 移除应用的优惠码
+    removeCoupon: (state) => {
+      state.appliedCoupon = null;
+      state.couponDiscount = 0;
+      state.couponMessage = "";
+    },
+    // 清除优惠码消息
+    clearCouponMessage: (state) => {
+      state.couponMessage = "";
     }
   },
   extraReducers: (builder) => {
@@ -256,9 +282,42 @@ const shoppingCartSlice = createSlice({
       .addCase(mergeGuestCartToUser.rejected, (state) => {
         state.isLoading = false;
         // 保持当前购物车状态
+      })
+      .addCase(validateCoupon.pending, (state) => {
+        state.isValidatingCoupon = true;
+        state.couponMessage = "";
+      })
+      .addCase(validateCoupon.fulfilled, (state, action) => {
+        state.isValidatingCoupon = false;
+        if (action.payload.success) {
+          state.appliedCoupon = action.payload.coupon;
+          state.couponMessage = `Coupon applied! You saved ${action.payload.coupon.discountType === 'percentage' ? action.payload.coupon.value + '%' : '$' + action.payload.coupon.value}`;
+          
+          // 计算折扣金额
+          const subtotal = state.cartItems?.items?.reduce((acc, item) => {
+            const unitPrice = item.salePrice > 0 ? item.salePrice : item.price;
+            return acc + unitPrice * item.quantity;
+          }, 0) || 0;
+          
+          if (action.payload.coupon.discountType === 'percentage') {
+            state.couponDiscount = (subtotal * action.payload.coupon.value) / 100;
+          } else {
+            state.couponDiscount = Math.min(action.payload.coupon.value, subtotal);
+          }
+        } else {
+          state.appliedCoupon = null;
+          state.couponDiscount = 0;
+          state.couponMessage = action.payload.message;
+        }
+      })
+      .addCase(validateCoupon.rejected, (state, action) => {
+        state.isValidatingCoupon = false;
+        state.appliedCoupon = null;
+        state.couponDiscount = 0;
+        state.couponMessage = "Error validating coupon. Please try again.";
       });
   },
 });
 
-export const { clearGuestCartState, initializeGuestCart } = shoppingCartSlice.actions;
+export const { clearGuestCartState, initializeGuestCart, removeCoupon, clearCouponMessage } = shoppingCartSlice.actions;
 export default shoppingCartSlice.reducer;
