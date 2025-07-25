@@ -1,4 +1,3 @@
-import ProductFilter from "@/components/shopping-view/filter";
 import ProductDetailsDialog from "@/components/shopping-view/product-details";
 import ShoppingProductTile from "@/components/common/product-tile";
 import AdminProductDialog from "@/components/admin-view/admin-product-dialog";
@@ -23,27 +22,14 @@ import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useSearchParams } from "react-router-dom";
 
-function createSearchParamsHelper(filterParams) {
-  const queryParams = [];
-
-  for (const [key, value] of Object.entries(filterParams)) {
-    if (Array.isArray(value) && value.length > 0) {
-      const paramValue = value.join(",");
-      queryParams.push(`${key}=${encodeURIComponent(paramValue)}`);
-    }
-  }
-
-  return queryParams.join("&");
-}
-
 function ShoppingListing() {
   const dispatch = useDispatch();
   const { productList, productDetails } = useSelector(
     (state) => state.shopProducts
   );
+  const { searchResults } = useSelector((state) => state.shopSearch);
   const { cartItems } = useSelector((state) => state.shopCart);
   const { user } = useSelector((state) => state.auth);
-  const [filters, setFilters] = useState({});
   const [sort, setSort] = useState(null);
   const [searchParams, setSearchParams] = useSearchParams();
   const [openDetailsDialog, setOpenDetailsDialog] = useState(false);
@@ -52,29 +38,12 @@ function ShoppingListing() {
   const [defaultFormData, setDefaultFormData] = useState(null);
   const { toast } = useToast();
 
-  const categorySearchParam = searchParams.get("category");
+  // 决定显示搜索结果还是普通商品列表
+  const displayProducts = searchResults.length > 0 ? searchResults : productList;
+  const isSearchMode = searchResults.length > 0;
 
   function handleSort(value) {
     setSort(value);
-  }
-
-  function handleFilter(getSectionId, getCurrentOption) {
-    let updatedFilters = { ...filters };
-
-    if (!updatedFilters[getSectionId]) {
-      updatedFilters[getSectionId] = [getCurrentOption];
-    } else {
-      const indexOfOption = updatedFilters[getSectionId].indexOf(getCurrentOption);
-
-      if (indexOfOption === -1) {
-        updatedFilters[getSectionId].push(getCurrentOption);
-      } else {
-        updatedFilters[getSectionId].splice(indexOfOption, 1);
-      }
-    }
-
-    setFilters(updatedFilters);
-    sessionStorage.setItem("filters", JSON.stringify(updatedFilters));
   }
 
   function handleGetProductDetails(getCurrentProductId) {
@@ -124,47 +93,49 @@ function ShoppingListing() {
       if (res?.payload?.success) {
         toast({ title: "Product deleted successfully" });
         dispatch(fetchAllProducts());
-        dispatch(fetchAllFilteredProducts({ filterParams: filters, sortParams: sort }));
+        dispatch(fetchAllFilteredProducts({ filterParams: {}, sortParams: sort }));
       }
     });
   }
 
   useEffect(() => {
     setSort("price-lowtohigh");
-    setFilters(JSON.parse(sessionStorage.getItem("filters")) || {});
-  }, [categorySearchParam]);
+  }, []);
 
   useEffect(() => {
-    const createQueryString = createSearchParamsHelper(filters);
+    const createQueryString = `sort=${sort}`;
     setSearchParams(new URLSearchParams(createQueryString));
-  }, [filters]);
+  }, [sort]);
 
   useEffect(() => {
-    // 立即获取商品数据，即使filters或sort为null
-    dispatch(
-      fetchAllFilteredProducts({ 
-        filterParams: filters || {}, 
-        sortParams: sort || "price-lowtohigh" 
-      })
-    );
-  }, [dispatch, sort, filters]);
+    // 只有在没有搜索关键词时才获取全部商品
+    if (!isSearchMode) {
+      dispatch(
+        fetchAllFilteredProducts({ 
+          filterParams: {}, 
+          sortParams: sort || "price-lowtohigh" 
+        })
+      );
+    }
+  }, [dispatch, sort, isSearchMode]);
 
   useEffect(() => {
     if (productDetails !== null) setOpenDetailsDialog(true);
   }, [productDetails]);
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-6 p-4 md:p-6">
-      <ProductFilter filters={filters} handleFilter={handleFilter} />
+    <div className="p-4 md:p-6">
       <div className="bg-background w-full rounded-lg shadow-sm">
         <div className="p-4 border-b flex items-center justify-between">
-          <h2 className="text-lg font-extrabold">All Products</h2>
+          <h2 className="text-lg font-extrabold">
+            {isSearchMode ? "Search Results" : "All Products"}
+          </h2>
           <div className="flex items-center gap-3">
             <span className="text-muted-foreground">
-              {productList?.length} Products
+              {displayProducts?.length || 0} Products
             </span>
 
-            {user?.role === "admin" && (
+            {user?.role === "admin" && !isSearchMode && (
               <Button
                 variant="outline"
                 size="sm"
@@ -178,35 +149,37 @@ function ShoppingListing() {
               </Button>
             )}
 
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center gap-1"
-                >
-                  <ArrowUpDownIcon className="h-4 w-4" />
-                  <span>Sort by</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-[200px]">
-                <DropdownMenuRadioGroup value={sort} onValueChange={handleSort}>
-                  {sortOptions.map((sortItem) => (
-                    <DropdownMenuRadioItem
-                      value={sortItem.id}
-                      key={sortItem.id}
-                    >
-                      {sortItem.label}
-                    </DropdownMenuRadioItem>
-                  ))}
-                </DropdownMenuRadioGroup>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            {!isSearchMode && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex items-center gap-1"
+                  >
+                    <ArrowUpDownIcon className="h-4 w-4" />
+                    <span>Sort by</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-[200px]">
+                  <DropdownMenuRadioGroup value={sort} onValueChange={handleSort}>
+                    {sortOptions.map((sortItem) => (
+                      <DropdownMenuRadioItem
+                        value={sortItem.id}
+                        key={sortItem.id}
+                      >
+                        {sortItem.label}
+                      </DropdownMenuRadioItem>
+                    ))}
+                  </DropdownMenuRadioGroup>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </div>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
-          {productList && productList.length > 0 ? (
-            productList.map((productItem) => (
+          {displayProducts && displayProducts.length > 0 ? (
+            displayProducts.map((productItem) => (
               <ShoppingProductTile
                 key={productItem._id}
                 handleGetProductDetails={handleGetProductDetails}
@@ -215,7 +188,7 @@ function ShoppingListing() {
                   image: productItem.image || "/nail.png",
                 }}
                 handleAddToCart={handleAddToCart}
-                isAdmin={user?.role === "admin"}
+                isAdmin={user?.role === "admin" && !isSearchMode}
                 onEditClick={(productItem) => {
                   setCurrentEditedId(productItem._id);
                   setDefaultFormData(productItem);
@@ -226,7 +199,7 @@ function ShoppingListing() {
             ))
           ) : (
             <p className="text-center text-gray-500 col-span-full">
-              No products found
+              {isSearchMode ? "No results found" : "No products found"}
             </p>
           )}
         </div>

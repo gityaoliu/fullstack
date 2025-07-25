@@ -113,49 +113,6 @@ export const addProductFormElements = [
   },
 ];
 
-export const shoppingViewHeaderMenuItems = [
-  {
-    id: "home",
-    label: "Home",
-    path: "/shop/listing",
-  },
-  {
-    id: "New Arrivals",
-    label: "New Arrivals",
-    path: "/shop/listing",
-  },
-  {
-    id: "Trendy Styles",
-    label: "Trendy Styles",
-    path: "/shop/listing",
-  },
-  {
-    id: "Minimalist",
-    label: "Minimalist",
-    path: "/shop/listing",
-  },
-  {
-    id: "Luxury & Glitter",
-    label: "Luxury & Glitter",
-    path: "/shop/listing",
-  },
-  {
-    id: "Dark & Edgy",
-    label: "Dark & Edgy",
-    path: "/shop/listing",
-  },
-  {
-    id: "French Tips",
-    label: "French Tips",
-    path: "/shop/listing",
-  },
-  {
-    id: "search",
-    label: "Search",
-    path: "/shop/search",
-  },
-];
-
 export const categoryOptionsMap = {
   Trendy_Styles: "Trendy_Styles",
   Minimalist: "Minimalist",
@@ -171,24 +128,6 @@ export const brandOptionsMap = {
   Green: "Green Collection",
   Yellow: "Yellow Collection",
   "Nude": "Nude Collection",
-};
-
-export const filterOptions = {
-  category: [
-    { id: "Trendy Styles", label: "Trendy Styles" },
-    { id: "Minimalist", label: "Minimalist" },
-    { id: "Luxury & Glitter", label: "Luxury & Glitter" },
-    { id: "French Tips", label: "French Tips" },
-    { id: "Dark & Edgy", label: "Dark & Edgy" },
-  ],
-  Color: [
-    { id: "Red Collection", label: "Red Collection" },
-    { id: "Black Collection", label: "Black Collection" },
-    { id: "Blue Collection", label: "Blue Collection" },
-    { id: "Green Collection", label: "Green Collection" },
-    { id: "Yellow Collection", label: "Yellow Collection" },
-    { id: "Nude Collection", label: "Nude Collection" },
-  ],
 };
 
 export const sortOptions = [

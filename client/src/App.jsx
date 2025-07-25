@@ -15,8 +15,6 @@ import { checkAuth } from "./store/auth-slice";
 import { Skeleton } from "@/components/ui/skeleton";
 import { initializeGuestCart } from "./store/shop/cart-slice";
 
-import SearchProducts from "./pages/shopping-view/search";
-
 import Careers from "./pages/shopping-view/careers";
 
 
@@ -76,7 +74,6 @@ function App() {
           
           
           
-          <Route path="search" element={<SearchProducts />} />
           <Route path="update-password" element={<UpdatePassword />} />
         </Route>
         <Route path="/unauth-page" element={<UnauthPage />} />

@@ -1,14 +1,12 @@
 import { Hand, LogOut, Menu, ShoppingCart, UserCog, User, Key } from "lucide-react";
 import {
   Link,
-  useLocation,
   useNavigate,
-  useSearchParams,
 } from "react-router-dom";
 import { Sheet, SheetContent, SheetTrigger } from "../ui/sheet";
 import { Button } from "../ui/button";
+import { Input } from "../ui/input";
 import { useDispatch, useSelector } from "react-redux";
-import { shoppingViewHeaderMenuItems } from "@/config";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,49 +17,38 @@ import {
 } from "../ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "../ui/avatar";
 import { logoutUser } from "@/store/auth-slice";
+import {
+  getSearchResults,
+  resetSearchResults,
+} from "@/store/shop/search-slice";
 import UserCartWrapper from "./cart-wrapper";
 import { useEffect, useState } from "react";
 import { fetchCartItems, initializeGuestCart } from "@/store/shop/cart-slice";
-import { Label } from "../ui/label";
 import nailcodeLogo from "../../assets/nailcodeLogo.png";
 
-function MenuItems() {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const [searchParams, setSearchParams] = useSearchParams();
+function SearchBar({ keyword, setKeyword }) {
+  const dispatch = useDispatch();
 
-  function handleNavigate(getCurrentMenuItem) {
-    sessionStorage.removeItem("filters");
-    const currentFilter =
-      getCurrentMenuItem.id !== "home" &&
-      getCurrentMenuItem.id !== "products" &&
-      getCurrentMenuItem.id !== "search"
-        ? {
-            category: [getCurrentMenuItem.id],
-          }
-        : null;
-
-    sessionStorage.setItem("filters", JSON.stringify(currentFilter));
-
-    location.pathname.includes("listing") && currentFilter !== null
-      ? setSearchParams(
-          new URLSearchParams(`?category=${getCurrentMenuItem.id}`)
-        )
-      : navigate(getCurrentMenuItem.path);
-  }
+  useEffect(() => {
+    if (keyword && keyword.trim() !== "" && keyword.trim().length > 0) {
+      const timer = setTimeout(() => {
+        dispatch(getSearchResults(keyword));
+      }, 500);
+      return () => clearTimeout(timer);
+    } else {
+      dispatch(resetSearchResults());
+    }
+  }, [keyword, dispatch]);
 
   return (
-    <nav className="flex flex-col mb-3 lg:mb-0 lg:items-center gap-6 lg:flex-row">
-      {shoppingViewHeaderMenuItems.map((menuItem) => (
-        <Label
-          onClick={() => handleNavigate(menuItem)}
-          className="text-sm font-medium cursor-pointer"
-          key={menuItem.id}
-        >
-          {menuItem.label}
-        </Label>
-      ))}
-    </nav>
+    <div className="flex-1 max-w-md mx-4">
+      <Input
+        value={keyword}
+        onChange={(event) => setKeyword(event.target.value)}
+        className="w-full"
+        placeholder="Search Products..."
+      />
+    </div>
   );
 }
 
@@ -163,6 +150,7 @@ function HeaderRightContent() {
 
 function ShoppingHeader() {
   const { isAuthenticated } = useSelector((state) => state.auth);
+  const [keyword, setKeyword] = useState("");
 
   return (
     <>
@@ -173,6 +161,8 @@ function ShoppingHeader() {
             <span className="font-bold text-lg"></span>
           </Link>
 
+          <SearchBar keyword={keyword} setKeyword={setKeyword} />
+
           <Sheet>
             <SheetTrigger asChild>
               <Button variant="outline" size="icon" className="lg:hidden">
@@ -181,14 +171,12 @@ function ShoppingHeader() {
               </Button>
             </SheetTrigger>
             <SheetContent side="left" className="w-full max-w-xs">
-              <MenuItems />
+              <div className="mb-4">
+                <SearchBar keyword={keyword} setKeyword={setKeyword} />
+              </div>
               <HeaderRightContent />
             </SheetContent>
           </Sheet>
-
-          <div className="hidden lg:block">
-            <MenuItems />
-          </div>
 
           <div className="hidden lg:block">
             <HeaderRightContent />
