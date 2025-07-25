@@ -164,30 +164,11 @@ function HeaderRightContent() {
 function ShoppingHeader() {
   const { isAuthenticated } = useSelector((state) => state.auth);
 
-  const rotatingTexts = [
-    "🌸 Welcome to NailCode – Spring Collection Just Dropped!",
-    "💅 Salon-Quality Nails, No Appointment Needed",
-    "🚚 Free Shipping on Orders Over $30",
-  ];
-
-  const [index, setIndex] = useState(0);
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setIndex((prev) => (prev + 1) % rotatingTexts.length);
-    }, 3000);
-    return () => clearInterval(timer);
-  }, []);
-
   return (
     <>
-      <div className="w-full h-6 flex items-center justify-center bg-gradient-to-r from-pink-100 via-[#ffeef3] to-pink-200 text-[#d63384] font-medium text-sm transition-all duration-500">
-        {rotatingTexts[index]}
-      </div>
-
       <header className="sticky top-0 z-40 w-full border-b bg-background">
         <div className="flex h-16 items-center justify-between px-4 md:px-6">
-          <Link to="/shop/home" className="flex items-center gap-2">
+          <Link to="/shop/listing" className="flex items-center gap-2">
             <img src={nailcodeLogo} alt="NailCode Logo" className="h-16 w-19 rounded" />
             <span className="font-bold text-lg"></span>
           </Link>

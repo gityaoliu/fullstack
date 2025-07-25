@@ -7,7 +7,7 @@ const initialState = {
 };
 
 export const getSearchResults = createAsyncThunk(
-  "/order/getSearchResults",
+  "/search/getSearchResults",
   async (keyword) => {
     const response = await axios.get(
       `http://localhost:8000/api/shop/search/${keyword}`

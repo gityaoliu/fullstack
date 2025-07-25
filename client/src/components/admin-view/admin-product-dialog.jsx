@@ -21,7 +21,6 @@ const initialFormData = {
   price: "",
   salePrice: "",
   totalStock: "",
-  averageReview: 0,
   productCode: "",
 };
 
@@ -43,7 +42,7 @@ function AdminProductDialog({
   // ✅ 校验表单
   function isFormValid() {
     return Object.keys(formData)
-      .filter((key) => key !== "averageReview" && key !== "salePrice")
+      .filter((key) => key !== "salePrice")
       .every((key) => formData[key] !== "");
   }
 

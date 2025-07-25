@@ -14,7 +14,6 @@ const shopCartRouter = require("./routes/shop/cart-routes");
 
 
 const shopSearchRouter = require("./routes/shop/search-routes");
-const shopReviewRouter = require("./routes/shop/review-routes");
 const shopCouponRouter = require("./routes/shop/coupon-routes");
 
 
@@ -60,7 +59,6 @@ app.use("/api/shop/cart", shopCartRouter);
 
 
 app.use("/api/shop/search", shopSearchRouter);
-app.use("/api/shop/review", shopReviewRouter);
 app.use("/api/shop/coupons", shopCouponRouter);
 app.use("/api/admin/coupons", adminCouponRouter);
 

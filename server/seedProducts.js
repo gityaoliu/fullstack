@@ -11,7 +11,6 @@ const sampleProducts = [
     price: 25,
     salePrice: 20,
     totalStock: 50,
-    averageReview: 4.5,
     productCode: "P001",
     image: "https://example.com/red-rose-nail.jpg"
   },
@@ -23,43 +22,41 @@ const sampleProducts = [
     price: 30,
     salePrice: 25,
     totalStock: 40,
-    averageReview: 4.8,
     productCode: "P002",
     image: "https://example.com/red-french-tips.jpg"
   },
   {
-    title: "Black Diamond Glitter",
-    description: "Stunning black glitter with diamond accents",
-    category: "Luxury & Glitter",
-    brand: ["Black Collection"],
-    price: 35,
-    salePrice: 30,
-    totalStock: 30,
-    averageReview: 4.6,
-    productCode: "P003",
-    image: "https://example.com/black-diamond.jpg"
-  },
-  {
-    title: "Blue Ocean Wave",
-    description: "Ocean-inspired blue wave nail design",
-    category: "Trendy Styles",
-    brand: ["Blue Collection"],
-    price: 28,
-    totalStock: 45,
-    averageReview: 4.7,
-    productCode: "P004",
-    image: "https://example.com/blue-ocean.jpg"
-  },
-  {
-    title: "Green Forest Minimalist",
-    description: "Simple green forest themed nails",
+    title: "Minimalist Black Nails",
+    description: "Simple and elegant black manicure",
     category: "Minimalist",
-    brand: ["Green Collection"],
-    price: 22,
+    brand: ["Black Collection"],
+    price: 18,
+    salePrice: 15,
     totalStock: 60,
-    averageReview: 4.4,
+    productCode: "P003", 
+    image: "https://example.com/minimalist-black.jpg"
+  },
+  {
+    title: "Gold Glitter Party Nails",
+    description: "Sparkly gold glitter for special occasions",
+    category: "Luxury & Glitter",
+    brand: ["Yellow Collection"],
+    price: 35,
+    salePrice: 0,
+    totalStock: 30,
+    productCode: "P004",
+    image: "https://example.com/gold-glitter.jpg"
+  },
+  {
+    title: "Dark Gothic Nails",
+    description: "Edgy dark design with gothic elements",
+    category: "Dark & Edgy", 
+    brand: ["Black Collection"],
+    price: 28,
+    salePrice: 22,
+    totalStock: 35,
     productCode: "P005",
-    image: "https://example.com/green-forest.jpg"
+    image: "https://example.com/gothic-nails.jpg"
   }
 ];
 

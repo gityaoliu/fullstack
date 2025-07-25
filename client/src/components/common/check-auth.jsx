@@ -8,7 +8,7 @@ function CheckAuth({ isAuthenticated, user, children }) {
     if (!isAuthenticated) {
       return <Navigate to="/shop/listing" />; // 改为跳转到商品页面
     } else {
-      return <Navigate to="/shop/home" />; // ✅ 登录用户跳转到 /shop/home
+      return <Navigate to="/shop/listing" />; // ✅ 登录用户也跳转到 /shop/listing
     }
   }
 
@@ -30,7 +30,7 @@ function CheckAuth({ isAuthenticated, user, children }) {
     (location.pathname.includes("/login") ||
       location.pathname.includes("/register"))
   ) {
-    return <Navigate to="/shop/home" />;
+    return <Navigate to="/shop/listing" />;
   }
 
   // ✅ 已登录用户访问不存在权限的路径

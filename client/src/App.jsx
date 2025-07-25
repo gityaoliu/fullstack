@@ -4,7 +4,6 @@ import AuthLogin from "./pages/auth/login";
 import AuthRegister from "./pages/auth/register";
 import ShoppingLayout from "./components/shopping-view/layout";
 import NotFound from "./pages/not-found";
-import ShoppingHome from "./pages/shopping-view/home";
 import ShoppingListing from "./pages/shopping-view/listing";
 import UpdatePassword from "./pages/shopping-view/update-password";
 
@@ -72,7 +71,6 @@ function App() {
           
           
           <Route path="careers" element={<Careers />} />
-          <Route path="home" element={<ShoppingHome />} />
           <Route path="listing" element={<ShoppingListing />} />
           
           
